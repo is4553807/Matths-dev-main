@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "MATTHS_DEV_SOURCE_SNAPSHOT_V3",
+  "createdAt": "2026-08-15T14:57:29+09:00",
+  "productionOrigin": "https://www.matths.kr",
+  "upstream": {
+    "repository": "https://github.com/is4553807/Matths.git",
+    "mainCommitAtLastReviewedMerge": "023a47368bef13d763eda0377b45c989f59ef01b",
+    "pushAllowed": false
+  },
+  "web": {
+    "sourceCommit": "9e31faf3659fb588ef847300fe4758b7234c29a4",
+    "productCodeBaseline": "3fe6350fd1dc9113939949ac4bccfb3ee7782b7c",
+    "path": "web",
+    "testManifest": 149,
+    "regression": "149/149 passed in canonical workspace",
+    "ejsTemplates": 120,
+    "trackedJavaScriptAndMjs": 726,
+    "liveDeploymentMatchesCandidate": false
+  },
+  "universalApp": {
+    "sourceCommit": "2819dbe3fb4f09933177d42ae580fb649b407a20",
+    "path": "ipad",
+    "deviceFamilies": ["iPhone", "iPad"],
+    "contracts": "64/64 passed in canonical workspace",
+    "debugSimulatorBuild": "passed",
+    "releaseSimulatorBuild": "passed",
+    "currentSignedIpadBuild": "signed Debug build from exact 2819dbe source passed codesign and installed on physical iPad",
+    "lastSignedExecutableSha256": "b7d522cb3bcad64f62e7f310edaaf0c78f3414715d8d55540e7394256911878d",
+    "lastPhysicalIpadInstall": "passed 2026-08-15 15:06 KST",
+    "lastPhysicalIpadLaunch": "blocked only because the connected device was locked",
+    "ling3DeviceArtifact": "Documents/models/Ling-3.0-tiny-Q3_K_M.gguf present, 3.58 GB; inference rerun pending unlocked device",
+    "physicalIphone": "not yet verified"
+  },
+  "principlesAndSmellReview": {
+    "status": "DIRECT_SOURCE_REVIEWED",
+    "appPrinciples": {
+      "pages": 84,
+      "numberedPrinciples": 2000,
+      "sha256": "7461bd6a870ff49e01ae23f8d3fd37fd5151b564cb4f91dd84368f91ecee464b"
+    },
+    "vibeCodingSmellGuide": {
+      "pages": 204,
+      "badPatterns": 72,
+      "goodPatterns": 72,
+      "domains": 8,
+      "releaseChecklistItems": 288,
+      "sha256": "6acd16ec4a5f3368304ed5e8a206707c33f102357b0686d35ed51f30d092290c"
+    },
+    "report": "web/docs/FINAL-PRINCIPLES-SMELL-READJUDICATION-20260815.md"
+  },
+  "oauth": {
+    "origin": "https://www.matths.kr",
+    "callback": "https://www.matths.kr/auth/google/callback",
+    "nativeBrowser": "ASWebAuthenticationSession",
+    "modernAppRoute": "/auth/google/app",
+    "legacyPublicAliasRemoved": true,
+    "exactEncryptedReplay": true,
+    "productionBoundaryStatus": "NOT_DEPLOYED: GitHub source sync does not prove the current www host is running this candidate"
+  },
+  "commerce": {
+    "ipadHub": true,
+    "catalogAuthority": "web Bearer API",
+    "handoff": "two-minute, one-use, SHA-256 token; fixed destination allowlist",
+    "releaseExternalDigitalPurchase": "hidden",
+    "entitlementRefreshOnReturn": true
+  },
+  "learningProgressBoundary": {
+    "status": "SERVER_VALIDATED",
+    "curriculumConceptAllowlist": true,
+    "generatorTypeAllowlist": true,
+    "requiredDistinctTypesServerOwned": true,
+    "futureTimestampRejected": true,
+    "fixedInWebCommit": "3fe6350fd1dc9113939949ac4bccfb3ee7782b7c"
+  },
+  "curriculum": {
+    "courseCount": 13,
+    "storyCount": 220,
+    "sceneCount": 1100,
+    "motionBeatCount": 3300,
+    "semanticFallbackCount": 0,
+    "difficultyBranches": ["mild", "spicy"],
+    "understandingCheck": "three-choice check with incorrect-to-mild retry",
+    "webIpadByteParityFiles": 15,
+    "defaultVoice": "ko-KR female system TTS preferred",
+    "measuredSystemVoice": "Yuna ko-KR female",
+    "measuredNarrationSeconds": {
+      "stories": 220,
+      "minimum": 234.9,
+      "maximum": 346.678,
+      "mean": 274.637,
+      "timeouts": 0
+    },
+    "studioExportTarget": "ElevenLabs v3",
+    "topTimeline": "one existing continueConcept target, five compact nodes",
+    "completionClaim": "PARTIAL: authored motion directions and runtime emphasis are present, but bespoke full motion-graphic lesson evidence is not complete for all 220 concepts"
+  },
+  "coach": {
+    "format": ["observation", "reason", "nextAction"],
+    "gradingAuthority": false,
+    "randomPraiseOnly": false,
+    "learningEffectEvidence": "EVIDENCE_REQUIRED"
+  },
+  "solutionFloating": {
+    "web": true,
+    "ipad": true,
+    "drawingUpload": false,
+    "analysisBoundary": "local, memory-only, network:false"
+  },
+  "screenProtection": {
+    "watermark": "single bottom-right mark at 3.5 percent opacity",
+    "recordingAndMirroring": "privacy cover while the official scene capture signal is active",
+    "applicationSwitcher": "privacy cover",
+    "oneShotScreenshot": "PLATFORM_LIMITATION: public iOS APIs cannot force a black gallery image for general SwiftUI/UIKit content"
+  },
+  "rankPromotion": {
+    "format": "H.264 MP4 with AAC",
+    "tierCount": 9,
+    "skip": true,
+    "reduceMotion": true,
+    "buildProvenanceBound": true,
+    "externalSourceAttestation": "required",
+    "appStoreEligible": false
+  },
+  "publicCheckout": {
+    "excluded": [
+      "web historical screenshots and tmp PDFs",
+      "web evidence/dist/generated media/node_modules/environment secrets/local DB/browser profiles",
+      "iPad KICE PDFs and Frameworks/llama.xcframework",
+      "DerivedData/build/IPA/XCArchive/signing and runtime credentials"
+    ],
+    "webRegression": "149/149 passed in the public integration workspace; npm ci audited 237 packages with 0 vulnerabilities",
+    "ipadContractsWithoutNonRedistributableOverlay": "62/64 passed; exactly two expected failures require the intentionally excluded llama framework and nine KICE PDFs",
+    "exactTrackedContentPolicy": "canonical tracked code minus the declared 74 web historical evidence files; iPad tracked content exact except declared non-redistributable resources"
+  },
+  "rollback": {
+    "commit": "4ec8290c2785ab0a54e72308ed3793ad2b04fde3",
+    "branch": "rollback/pre-final-principles-sync-20260815-4ec8290",
+    "annotatedTag": "snapshot/pre-final-principles-sync-20260815-4ec8290"
+  },
+  "arenaLogic": {
+    "status": "frozen",
+    "productPathChangesSincePreviousSnapshot": 0,
+    "policy": "Do not change gameplay, rules, economy, settlement, difficulty, tier definitions, or shop policy without explicit product approval."
+  }
+}

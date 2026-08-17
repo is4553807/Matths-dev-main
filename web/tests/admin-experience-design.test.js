@@ -1,0 +1,126 @@
+"use strict";
+
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const ejs = require("ejs");
+
+const root = path.resolve(__dirname, "..");
+const viewsDirectory = path.join(root, "views");
+const stylesheet = fs.readFileSync(
+  path.join(root, "public/css/admin-v2.css"),
+  "utf8",
+);
+const legacyAdminStylesheet = fs.readFileSync(
+  path.join(root, "public/css/admin.css"),
+  "utf8",
+);
+const adminViews = fs
+  .readdirSync(viewsDirectory)
+  .filter((name) => /^admin-.*\.ejs$/.test(name));
+
+async function run() {
+  assert.equal(adminViews.length, 24, "관리자 상위 화면 수가 바뀌면 전수 범위를 갱신해야 합니다.");
+  for (const filename of adminViews) {
+    const source = fs.readFileSync(path.join(viewsDirectory, filename), "utf8");
+    assert.match(
+      source,
+      /href="\/css\/admin-v2\.css"/,
+      `${filename}가 운영센터 공통 정비층을 불러와야 합니다.`,
+    );
+    const uppercaseLabels = [
+      ...source.matchAll(
+        /<(?:p|small|span)>([A-Z][A-Z0-9 &/·_-]{2,})<\/(?:p|small|span)>/g,
+      ),
+    ].map((match) => match[1]);
+    assert.deepEqual(
+      uppercaseLabels.filter(
+        (label) => !["GOAT ARENA", "UNRANKED", "RANKED"].includes(label),
+      ),
+      [],
+      `${filename}에 사용자 설명이 아닌 내부 영문 라벨이 남아 있습니다.`,
+    );
+  }
+
+  const html = await ejs.renderFile(path.join(viewsDirectory, "admin-dashboard.ejs"), {
+    user: { name: "운영자" },
+    feedback: null,
+    error: null,
+    oldInput: {},
+    adminTodoSummary: { pendingCount: 2, items: [] },
+    adminData: {
+      stats: {
+        activeUsers: 120,
+        activeParents: 44,
+        pendingInquiries: 3,
+        publishedAnnouncements: 2,
+        archiveItems: 30,
+        archiveFolders: 4,
+      },
+      revenue: {
+        netRevenue: 290_000,
+        todayRevenue: 29_000,
+        grossApproved: 319_000,
+        refunded: 29_000,
+        cancelled: 0,
+        updatedAt: "2026-08-11T09:00:00.000Z",
+      },
+      inquiries: [],
+      announcements: [],
+    },
+  });
+  assert.match(html, /관리자 운영센터/);
+  assert.match(html, /현재 매출 지표/);
+  assert.match(html, /처리할 관리자 알림 2개/);
+  assert.match(html, /aria-current="page"/);
+  assert.match(html, /href="\/css\/admin-v2\.css"/);
+  assert.match(html, /class="admin-account-identity"/);
+  assert.match(html, /class="admin-account-compact"/);
+
+  assert.doesNotMatch(stylesheet, /(?:linear|radial|conic)-gradient\s*\(/);
+  assert.match(stylesheet, /\.admin-heading,[\s\S]*background:\s*var\(--matths-surface\)/);
+  assert.match(stylesheet, /\.admin-form input,[\s\S]*min-height:\s*44px/);
+  assert.match(stylesheet, /\.danger-form button,[\s\S]*background:\s*var\(--matths-danger\)/);
+  assert.match(
+    stylesheet,
+    /\.admin-page \.admin-topbar \.admin-main-nav > a,[\s\S]*color:\s*var\(--matths-muted\)/,
+    "라이트 관리자 헤더 내비는 AA 전경 토큰을 명시해야 합니다.",
+  );
+  assert.match(
+    stylesheet,
+    /\.admin-page \.admin-topbar \.admin-account-user > \.admin-account-identity\s*\{[\s\S]*color:\s*var\(--matths-ink\)/,
+    "관리자 로그인 주체는 라이트 헤더에서 잉크색으로 보여야 합니다.",
+  );
+  assert.match(
+    stylesheet,
+    /@media \(max-width: 1050px\)[\s\S]*\.admin-account-compact\s*\{[\s\S]*display:\s*inline-grid/,
+    "좁은 관리자 헤더에서도 계정 식별 배지를 유지해야 합니다.",
+  );
+  assert.match(stylesheet, /\.admin-table-wrap,[\s\S]*overflow-x:\s*auto/);
+  assert.match(
+    stylesheet,
+    /@media\s*\(max-width:\s*520px\)[\s\S]*\.admin-main-nav\s*\{[\s\S]*overflow-x:\s*auto/,
+  );
+  assert.match(
+    legacyAdminStylesheet,
+    /\.admin-policy-card\s*\{[\s\S]*?min-width:\s*0;[\s\S]*?max-width:\s*100%;[\s\S]*?box-sizing:\s*border-box;/,
+    "관리자 정책 카드는 320px에서 고정 min-content 폭으로 화면 밖에 나가면 안 됩니다.",
+  );
+  assert.match(
+    legacyAdminStylesheet,
+    /@media \(max-width: 760px\)[\s\S]*?\.admin-alert-dock\s*\{[\s\S]*?position:\s*relative;[\s\S]*?top:\s*auto;[\s\S]*?width:\s*min\(100% - 24px,\s*1440px\);[\s\S]*?min-height:\s*44px;[\s\S]*?margin:\s*12px auto 0;/,
+    "모바일 관리 알림은 가변 높이 헤더 아래의 독립 행으로 노출되어야 합니다.",
+  );
+  assert.match(
+    legacyAdminStylesheet,
+    /@media \(max-width: 760px\)[\s\S]*?\.admin-alert-menu > button\s*\{[\s\S]*?height:\s*44px;/,
+    "모바일 관리 알림 버튼은 최소 터치 높이를 유지해야 합니다.",
+  );
+
+  console.log("admin 24-view operation hierarchy and density contract passed");
+}
+
+run().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

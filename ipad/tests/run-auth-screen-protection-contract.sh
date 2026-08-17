@@ -1,0 +1,131 @@
+#!/bin/sh
+set -eu
+
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+MODULE_CACHE="${TMPDIR:-/tmp}/matths-screen-integrity-module-cache"
+CASES_BIN="${TMPDIR:-/tmp}/matths-screen-integrity-contract-cases"
+
+mkdir -p "$MODULE_CACHE"
+xcrun swiftc \
+  -module-cache-path "$MODULE_CACHE" \
+  "$ROOT/Matths/ScreenIntegrityEventContract.swift" \
+  "$ROOT/Matths/DataScope.swift" \
+  "$ROOT/tests/ScreenIntegrityEventContractCases.swift" \
+  -o "$CASES_BIN"
+"$CASES_BIN"
+
+grep -q 'static let defaultURL = "https://www.matths.kr"' "$ROOT/Matths/ServerAPI.swift"
+! grep -q 'static let defaultURL = "https://matths.kr"' "$ROOT/Matths/ServerAPI.swift"
+! grep -q 'trycloudflare.com' "$ROOT/Matths/ServerAPI.swift"
+grep -q 'ASWebAuthenticationSession' "$ROOT/Matths/GoogleSignInCoordinator.swift"
+grep -q '/api/v1/auth/google/exchange' "$ROOT/Matths/ServerAPI.swift"
+grep -q '<string>matths</string>' "$ROOT/Info.plist"
+grep -q 'UIScreen.capturedDidChangeNotification' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'UIScreen.main.isCaptured' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -Fq '@Environment(\.isSceneCaptured)' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'setSceneCaptureState(isSceneCaptured)' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'setSceneCaptureState(captured)' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'UIApplication.willResignActiveNotification' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'UIApplication.didBecomeActiveNotification' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'protected-screen-screenshot' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'protected-screen-capture-started' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'enqueueIntegrityEvent' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'integritySessionCode' "$ROOT/Matths/SyncEngine.swift"
+grep -q 'protectedSurface' "$ROOT/Matths/SyncEngine.swift"
+grep -q 'ProtectedContentWatermark' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'accountWatermarkCode' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'screenProtectionAccountCode' "$ROOT/Matths/DataScope.swift"
+grep -q '@State private var id = UUID()' "$ROOT/Matths/ScreenshotGuard.swift"
+! grep -q 'private let id = UUID()' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'screenProtectionLayer(guardModel: screenshotGuard)' "$ROOT/Matths/MatthsApp.swift"
+grep -q 'protectedAssessmentPresentation' "$ROOT/Matths/GoatArenaScreen.swift"
+grep -q 'guardModel: screenshotGuard' "$ROOT/Matths/GoatArenaScreen.swift"
+grep -q 'ScreenProtectionSelfTest.runIfRequested' "$ROOT/Matths/MatthsApp.swift"
+grep -q 'serverSyncSuppressed: true' "$ROOT/Matths/ScreenProtectionSelfTest.swift"
+grep -q 'MATTHS_SCREEN_PROTECTION_DEVICE_QA_V1' "$ROOT/Matths/ScreenProtectionSelfTest.swift"
+grep -q 'runIntegrityQueueDeviceQA' "$ROOT/Matths/ScreenProtectionSelfTest.swift"
+grep -q 'queuePayloadPreserved' "$ROOT/Matths/ScreenProtectionSelfTest.swift"
+grep -q 'repeatedScreenshotRecorded' "$ROOT/Matths/ScreenProtectionSelfTest.swift"
+grep -q 'accountWatermarkPseudonymous' "$ROOT/Matths/ScreenProtectionSelfTest.swift"
+grep -q 'loadQueue(at: url, quarantineURL: nil)' "$ROOT/Matths/SyncEngine.swift"
+grep -q 'simulateScreenshotForDeviceQA' "$ROOT/Matths/ScreenshotGuard.swift"
+if grep -q '답을 찾으러 갈 시간' "$ROOT/Matths/ScreenshotGuard.swift"; then
+  echo "student-blaming screenshot copy must not return" >&2
+  exit 1
+fi
+grep -q 'guardModel.isPrivacyCoverActive' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'protectedAssessmentPresentation' "$ROOT/Matths/GoatArenaScreen.swift"
+for screen in KiceExamScreen AssessmentPaperScreen PlacementExamScreen WeeklyMockScreen; do
+  if ! perl -0ne "exit 0 if /${screen}\\(\\)[\\s\\S]{0,140}\\.protectedAssessmentSurface\\([^)]*\\)/; exit 1" \
+      "$ROOT/Matths/RootView.swift"; then
+    echo "$screen must use the shared protected assessment surface" >&2
+    exit 1
+  fi
+done
+! grep -R -q 'isSecureTextEntry.*screenshot\|screenshot.*isSecureTextEntry' "$ROOT/Matths"
+
+python3 - "$ROOT/Matths/ScreenshotGuard.swift" "$ROOT/Matths/SyncEngine.swift" <<'PY'
+from pathlib import Path
+import sys
+
+guard_source = Path(sys.argv[1]).read_text(encoding="utf-8")
+sync_source = Path(sys.argv[2]).read_text(encoding="utf-8")
+
+screenshot_start = guard_source.index("private func handleScreenshotDetected()")
+screenshot_end = guard_source.index("#if DEBUG", screenshot_start)
+screenshot_body = guard_source[screenshot_start:screenshot_end]
+if "recordIntegrityEvent" not in screenshot_body:
+    raise SystemExit("every protected screenshot notification must be recorded, including repeats")
+for forbidden in ("isShowing = true", "UINotificationFeedbackGenerator"):
+    if forbidden in screenshot_body:
+        raise SystemExit("post-screenshot notification must not interrupt or punish the student")
+
+enqueue_start = sync_source.index("func enqueueIntegrityEvent(")
+enqueue_end = sync_source.index("/// 평가·기출", enqueue_start)
+enqueue_body = sync_source[enqueue_start:enqueue_end]
+for forbidden in ("email", "school", "accountWatermarkCode", "DataScope.slot", "matchId", "questionId"):
+    if forbidden in enqueue_body:
+        raise SystemExit(f"integrity payload must not include {forbidden}")
+PY
+
+python3 - "$ROOT/Matths/ScreenshotGuard.swift" <<'PY'
+from pathlib import Path
+import sys
+
+source = Path(sys.argv[1]).read_text(encoding="utf-8")
+layer_start = source.index("struct ScreenProtectionLayer: View")
+layer_end = source.index("private struct ScreenProtectionLayerModifier", layer_start)
+layer = source[layer_start:layer_end]
+if "ScreenshotGuardOverlay" in layer or "guardModel.isShowing" in layer:
+    raise SystemExit("post-screenshot punitive modal must not cover the student's work")
+for required in (
+    "@Environment(\\.isSceneCaptured)",
+    "guardModel.isCaptureActive",
+    "guardModel.isPrivacyCoverActive",
+    "CapturePrivacyCover()",
+    "guardModel.accountWatermarkCode",
+    "guardModel.watermarkCode",
+    "setSceneCaptureState(isSceneCaptured)",
+    "setSceneCaptureState(captured)",
+):
+    if required not in layer:
+        raise SystemExit(f"shared screen protection layer is missing {required}")
+
+watermark_start = source.index("struct ProtectedContentWatermark")
+watermark_end = source.index("struct ScreenshotGuardOverlay", watermark_start)
+watermark = source[watermark_start:watermark_end]
+if "ForEach" in watermark or "rotationEffect" in watermark:
+    raise SystemExit("watermark must stay in one quiet region instead of repeating over problems")
+for required in ("bottomTrailing", "opacity(0.035)"):
+    if required not in watermark:
+        raise SystemExit(f"quiet regional watermark is missing {required}")
+
+presentation_start = source.index("private struct ProtectedAssessmentPresentation")
+presentation_end = source.index("extension View", presentation_start)
+presentation = source[presentation_start:presentation_end]
+for required in ("ProtectedAssessmentSurface", "ScreenProtectionLayerModifier"):
+    if required not in presentation:
+        raise SystemExit(f"protected full-screen presentation is missing {required}")
+PY
+
+echo "Google auth and supported screen protection contract passed"
